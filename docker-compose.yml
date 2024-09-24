@@ -1,7 +1,7 @@
 services:
   mongo:
     image: mongo:latest
-    container_name: mongodb
+    container_name: zipcodequery_mongodb
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}

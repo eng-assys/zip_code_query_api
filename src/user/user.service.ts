@@ -5,20 +5,27 @@ import { User } from './schemas/user.squema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserNotFoundException } from './errors/user-not-found-bad-request.error';
+import * as bcrypt from 'bcrypt';
+import configuration from 'src/config/configuration';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(body: CreateUserDto) {
     try {
-      const createdUser = new this.userModel(createUserDto);
-      return await createdUser.save();
+      if (body.password)
+        body.password = await this.createHashedPassword(body.password);
+
+      const userModel = new this.userModel(body);
+      const user = await userModel.save();
+      delete user.password;
+      return user;
     } catch (error) {
       // E11000 duplicate key error collection: test.users
       if (error.code === 11000) {
         throw new ConflictException(
-          `The email ${createUserDto.email} is already in use`,
+          `The email ${body.email} is already in use`,
         );
       }
       throw error;
@@ -32,6 +39,9 @@ export class UserService {
   async findOne(id: string) {
     const user = await this.userModel.findById(id).exec();
     if (!user) throw new UserNotFoundException();
+
+    delete user.password;
+
     return user;
   }
 
@@ -46,6 +56,8 @@ export class UserService {
     const updatedUser = await this.userModel.findById(id).exec();
     if (!updatedUser) throw new UserNotFoundException();
 
+    delete updatedUser.password;
+
     return updatedUser;
   }
 
@@ -53,5 +65,13 @@ export class UserService {
     const deleteResponse = await this.userModel.deleteOne({ _id: id }).exec();
 
     if (!deleteResponse.deletedCount) throw new UserNotFoundException();
+  }
+
+  async checkIncomePassword(password: string, userPassword: string) {
+    return await bcrypt.compare(password, userPassword);
+  }
+
+  private async createHashedPassword(password: string) {
+    return await bcrypt.hash(password, configuration().api.bcrypt.saltRounds);
   }
 }

@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserNotFoundException } from './errors/user-not-found-bad-request.error';
 import * as bcrypt from 'bcrypt';
-import configuration from 'src/config/configuration';
+import configuration from '../config/configuration';
 
 @Injectable()
 export class UserService {

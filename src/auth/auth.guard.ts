@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import configuration from 'src/config/configuration';
+import configuration from '../config/configuration';
 import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
